@@ -25,16 +25,16 @@ with open(args.input,"r") as infile:
     for line in infile:
         line = line.strip()
         if numlines == 0:
-            if "NAME" in line:
-                featid = line.split("NAME: ")[1]
-            if "PRECURSORMZ" in line:
-                mz = float(line.split("PRECURSORMZ: ")[1])
+            if "CH$NAME:" in line:
+                featid = line.split("CH$NAME: ")[1]
+            if "MS$FOCUSED_ION:" in line:
+                mz = float(line.split("MS$FOCUSED_ION: PRECURSOR_M/Z ")[1])
                 if args.polarity=="pos":
                     mz2 = mz-1.007276
                 else:
                     mz2 = mz+1.007276
-            if "Num Peaks" in line:
-                numlines = int(line.split("Num Peaks: ")[1])
+            if "PK$NUM_PEAK:" in line:
+                numlines = int(line.split("PK$NUM_PEAK: ")[1])
                 linesread = 0
                 peaklist = []
         else:
@@ -71,9 +71,11 @@ with open(args.input,"r") as infile:
                 print "metfrag {0}".format(cmd_command)
                 os.system("metfrag {0}".format(cmd_command))
             else:
-                line = tuple(line.split("\t"))
-                linesread += 1
-                peaklist.append(line)
+                if not "PK$PEAK:" in line:
+                    line = tuple(line.split("\t"))
+                    save_line = tuple(line[0].split("\t") + line[1].split("\t"))
+                    linesread += 1
+                    peaklist.append(save_line)
 
 
 #outputs might have different headers. Need to get a list of all the headers before we start merging the files

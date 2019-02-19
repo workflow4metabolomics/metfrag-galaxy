@@ -5,8 +5,7 @@
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
-        #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/msmstools')
-        python $tool_directory/metfrag.py
+        python $__tool_directory__/metfrag.py
             --input "$input"
             --db_local '$db_local'
             --db_online '$db_online'
