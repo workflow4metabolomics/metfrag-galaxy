@@ -2,7 +2,7 @@ import argparse
 import csv
 import os
 import sys
-from collections import defauldict
+from collections import defaultdict
 print(sys.version)
 
 parser = argparse.ArgumentParser()
