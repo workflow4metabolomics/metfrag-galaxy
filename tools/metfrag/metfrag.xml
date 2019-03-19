@@ -16,7 +16,8 @@
             --polarity $polarity
             --results '$results'
             --threads \${GALAXY_SLOTS:-4}
-            
+            --minMSMSpeaks $minMSMSpeaks
+
             $PreProcessFilter.UnconnectedCompoundFilter
             $PreProcessFilter.IsotopeFilter
 
@@ -28,8 +29,12 @@
             --elemexcluinclusion '$PreProcessFilter.ElementInclusionExclusiveFilter'
             --elemexclusion '$PreProcessFilter.ElementExclusionFilter'
 
+            --score_thrshld $PostProcessFilter.score_thrshld
+            --pctexplpeak_thrshld $PostProcessFilter.pctexplpeak_thrshld
+
     ]]></command>
     <inputs>
+
         <param name="input" type="data" format="msp,txt" label="MSP file (Output from Create MSP tool)"/>
         <param name="db_local" type="data" format="csv" optional="true" label="Local Database (CSV)"/>
         <param name="db_online" type="select" optional="true" label="Available MetFrag Databases">
@@ -44,6 +49,8 @@
             <option value="pos" selected="true">Positive</option>
             <option value="neg">Negative</option>
         </param>
+        <param name="minMSMSpeaks" type="integer" label="Minimum number of MS/MS peaks" value="0"/>
+
         <section name="PreProcessFilter" title="PreProcessing filters" expanded="False">
             <param name="UnconnectedCompoundFilter" type="boolean" checked="false" truevalue="--unconnectcompnd" falsevalue="" label="filter non-connected compounds (e.g. salts)" help=""/>
             <param name="IsotopeFilter" type="boolean" checked="false" truevalue="--isotopefilter" falsevalue="" label="filter compounds containing non-standard isotopes" help=""/>
@@ -55,6 +62,12 @@
             <param name="ElementInclusionExclusiveFilter" type="text" label="Only include these elements" help="Filter by presence of defined elements (no other elements are allowed). Ex: 'N,O' include compounds only composed of nitrogen and oxygen"/>
             <param name="ElementExclusionFilter" type="text" label="Exclude elements" help="Filter by absence of defined sub-structures. Ex: 'Cl,Br' filter out compounds including bromine or chlorine"/>
         </section>
+
+        <section name="PostProcessFilter" title="PostProcessing filters" expanded="False">
+            <param name="score_thrshld" type="float" label="Threshold for score after MetFrag search" max="1" min="0" value="1"/>
+            <param name="pctexplpeak_thrshld" type="integer" label="Minimum percentage of explain peaks" max="100" min="0" value="0"/>
+        </section>
+
     </inputs>
     <outputs>
         <data name="results" format="tabular" label="${tool.name} results of ${input.name}" />

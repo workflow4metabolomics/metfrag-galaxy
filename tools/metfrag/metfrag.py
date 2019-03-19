@@ -14,6 +14,7 @@ parser.add_argument('--ppm')
 parser.add_argument('--ppm_frag')
 parser.add_argument('--fragmasstol')
 parser.add_argument('--polarity')
+parser.add_argument('--minMSMSpeaks')
 parser.add_argument('--results')
 parser.add_argument('--threads')
 parser.add_argument('--unconnectcompnd', action='store_true')
@@ -25,9 +26,13 @@ parser.add_argument('--subexclusion')
 parser.add_argument('--eleminclusion')
 parser.add_argument('--elemexcluinclusion')
 parser.add_argument('--elemexclusion')
+parser.add_argument('--score_thrshld')
+parser.add_argument('--pctexplpeak_thrshld')
 
 args = parser.parse_args()
 print args
+
+
 
 #Stock filters in dict (names have been choose to add them directly in MetFragPreProcessingCandidateFilter parameter)
 dct_filter = defaultdict(list)
@@ -133,15 +138,17 @@ with open(args.input,"r") as infile:
                         param.append(f)
                         defparam[dct_keepf[f][1]].append(dct_keepf[f][0])
 
-                cmd_command += "MetFragPreProcessingCandidateFilter={} ".format(','.join(param))
-                for key in defparam:
-                    cmd_command += "{0}={1} ".format(str(key),str(defparam[key][0]))
+                if param:
+                    cmd_command += "MetFragPreProcessingCandidateFilter={} ".format(','.join(param))
+                    for key in defparam:
+                        cmd_command += "{0}={1} ".format(str(key),str(defparam[key][0]))
                 
 
-
-                # run Metfrag
-                print "java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command)
-                os.system("java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command))
+                #Filter before process with a minimum number of MS/MS peaks
+                if linesread >= float(args.minMSMSpeaks):
+                    # run Metfrag
+                    print "java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command)
+                    os.system("java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command))
             else:
                 #One line not need between numpeak and peaklist
                 if not "PK$PEAK:" in line:
@@ -184,11 +191,27 @@ with open(args.results, 'a') as merged_outfile:
         with open("/home/jsaintvanne/tmet/"+fname) as infile:
             reader = csv.DictReader(infile, delimiter=',', quotechar='"')
             for line in reader:
+                bewrite = True
                 for key, value in line.items():
                     #Filter when no MS/MS peak matched
                     if key == "ExplPeaks":
-                        if not "NA" in value:
-                            line['UID'] = fileid
-                            dwriter.writerow(line)
+                        if "NA" in value:
+                            bewrite = False
+                    #Filter with a score threshold
+                    elif key == "Score":
+                        if value <= args.score_thrshld:
+                            bewrite = False
+                    elif key == "NoExplPeaks":
+                        nbfindpeak = float(value)
+                    elif key == "NumberPeaksUsed":
+                        totpeaks = float(value)
+                #Filter with a relative number of peak matched
+                pctexplpeak = nbfindpeak / totpeaks * 100
+                if pctexplpeak < float(args.pctexplpeak_thrshld):
+                    bewrite = False
+                #Write the line if it pass all filters
+                if bewrite:
+                    line['UID'] = fileid
+                    dwriter.writerow(line)
 
 
