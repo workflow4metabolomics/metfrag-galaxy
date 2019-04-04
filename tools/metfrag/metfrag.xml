@@ -64,7 +64,7 @@
         </section>
 
         <section name="PostProcessFilter" title="PostProcessing filters" expanded="False">
-            <param name="score_thrshld" type="float" label="Threshold for score after MetFrag search" max="1" min="0" value="1"/>
+            <param name="score_thrshld" type="float" label="Threshold for score after MetFrag search" max="1" min="0" value="0"/>
             <param name="pctexplpeak_thrshld" type="integer" label="Minimum percentage of explain peaks" max="100" min="0" value="0"/>
         </section>
 

@@ -67,12 +67,12 @@ for key,val in dct_keepf.items():
 print "\n"
 
 #Create repo to work
-if not os.path.exists("/home/jsaintvanne/tmet"):
-    os.makedirs("/home/jsaintvanne/tmet")
+if not os.path.exists("./tmet"):
+    os.makedirs("./tmet")
 else:
     #Clean the repo if already exist
-    for filename in os.listdir("/home/jsaintvanne/tmet"):
-        os.remove("/home/jsaintvanne/tmet" + "/" + filename)
+    for filename in os.listdir("./tmet"):
+        os.remove("./tmet" + "/" + filename)
 
 with open(args.input,"r") as infile:
     numlines = 0
@@ -82,7 +82,7 @@ with open(args.input,"r") as infile:
             if "CH$NAME:" in line:
                 featid = line.split("CH$NAME: ")[1]
                 featid = featid.split(" ")
-                featid = featid[1] + "_" + featid[3] + "_" + featid[5] + "_" + featid[7]
+                featid = featid[5].split(":")[1] + "-" + featid[7].split(":")[1] + "-" + featid[3].split(":")[1]
             if "MS$FOCUSED_ION:" in line:
                 mz = float(line.split("MS$FOCUSED_ION: PRECURSOR_M/Z ")[1])
                 if args.polarity=="pos":
@@ -97,11 +97,11 @@ with open(args.input,"r") as infile:
             if linesread == numlines:
                 numlines = 0
                 #write spec file
-                with open('/home/jsaintvanne/tmpspec.txt', 'w') as outfile:
+                with open('./tmpspec.txt', 'w') as outfile:
                     for p in peaklist:
                         outfile.write(p[0]+"\t"+p[1]+"\n")
                 #create commandline input
-                cmd_command = "PeakListPath=/home/jsaintvanne/tmpspec.txt "
+                cmd_command = "PeakListPath=./tmpspec.txt "
                 if args.db_local != "None":
                     cmd_command += "MetFragDatabaseType=LocalCSV "
                     cmd_command += "LocalDatabasePath={0} ".format(args.db_local)
@@ -112,7 +112,7 @@ with open(args.input,"r") as infile:
                 cmd_command += "DatabaseSearchRelativeMassDeviation={0} ".format(args.ppm)
                 cmd_command += "NeutralPrecursorMass={0} ".format(mz2)
                 cmd_command += "SampleName={0}_metfrag ".format(featid)
-                cmd_command += "ResultsPath=/home/jsaintvanne/tmet/ "
+                cmd_command += "ResultsPath=./tmet/ "
                 if args.polarity == "pos":
                     cmd_command += "IsPositiveIonMode=True "
                 else:
@@ -147,8 +147,8 @@ with open(args.input,"r") as infile:
                 #Filter before process with a minimum number of MS/MS peaks
                 if linesread >= float(args.minMSMSpeaks):
                     # run Metfrag
-                    print "java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command)
-                    os.system("java -jar /home/jsaintvanne/Outils/MetFrag2.4.5-CL.jar {0}".format(cmd_command))
+                    print "metfrag {0}".format(cmd_command)
+                    os.system("metfrag {0}".format(cmd_command))
             else:
                 #One line not need between numpeak and peaklist
                 if not "PK$PEAK:" in line:
@@ -160,12 +160,12 @@ with open(args.input,"r") as infile:
 
 
 #outputs might have different headers. Need to get a list of all the headers before we start merging the files
-outfiles = sorted(os.listdir("/home/jsaintvanne/tmet"))
+outfiles = sorted(os.listdir("./tmet"))
 
 headers = []
 c = 0
 for fname in outfiles:
-    with open("/home/jsaintvanne/tmet/"+fname) as infile:
+    with open("./tmet/"+fname) as infile:
         reader = csv.reader(infile)
         headers.extend(reader.next())
         # check if file has any data rows 
@@ -188,7 +188,7 @@ with open(args.results, 'a') as merged_outfile:
 
     for fname in outfiles:
         fileid = os.path.basename(fname).split("_")[0]
-        with open("/home/jsaintvanne/tmet/"+fname) as infile:
+        with open("./tmet/"+fname) as infile:
             reader = csv.DictReader(infile, delimiter=',', quotechar='"')
             for line in reader:
                 bewrite = True
